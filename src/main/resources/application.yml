@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sample_ai
+    username: dev
+    password: dev
+    initialization-mode: never
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
