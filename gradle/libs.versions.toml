@@ -1,0 +1,33 @@
+[versions]
+spring-boot          = "3.4.0"
+spring-dep-mgmt      = "1.1.6"
+kotlin               = "2.1.0"
+jackson-kotlin       = "2.18.2"
+testcontainers       = "1.20.4"
+# spring-ai BOM version lives in gradle.properties (springAiVersion) because
+# io.spring.dependency-management resolves it before catalog accessors are ready.
+
+[libraries]
+# Spring Boot (versions managed by io.spring.dependency-management via Spring Boot BOM)
+spring-boot-web              = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-boot-test             = { module = "org.springframework.boot:spring-boot-starter-test" }
+spring-boot-testcontainers   = { module = "org.springframework.boot:spring-boot-testcontainers" }
+
+# Spring AI (versions managed by io.spring.dependency-management via Spring AI BOM)
+spring-ai-ollama             = { module = "org.springframework.ai:spring-ai-starter-model-ollama" }
+spring-ai-opensearch         = { module = "org.springframework.ai:spring-ai-starter-vector-store-opensearch" }
+spring-ai-testcontainers     = { module = "org.springframework.ai:spring-ai-spring-boot-testcontainers" }
+
+# Kotlin
+kotlin-reflect               = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+jackson-module-kotlin        = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson-kotlin" }
+
+# Testcontainers
+testcontainers-junit         = { module = "org.testcontainers:junit-jupiter",   version.ref = "testcontainers" }
+testcontainers-ollama        = { module = "org.testcontainers:ollama",           version.ref = "testcontainers" }
+
+[plugins]
+spring-boot         = { id = "org.springframework.boot",            version.ref = "spring-boot" }
+spring-dep-mgmt     = { id = "io.spring.dependency-management",     version.ref = "spring-dep-mgmt" }
+kotlin-jvm          = { id = "org.jetbrains.kotlin.jvm",            version.ref = "kotlin" }
+kotlin-spring       = { id = "org.jetbrains.kotlin.plugin.spring",  version.ref = "kotlin" }
