@@ -27,12 +27,29 @@ dependencies {
     implementation(libs.kotlin.reflect)
 
     testImplementation(libs.spring.boot.test)
+    testImplementation(libs.spring.boot.testcontainers)
+    testImplementation(libs.spring.ai.testcontainers)
+    testImplementation(libs.testcontainers.junit)
+    testImplementation(libs.testcontainers.ollama)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 kotlin {
     jvmToolchain(21)
     compilerOptions {
         freeCompilerArgs.add("-Xjsr305=strict")
+    }
+}
+
+// Force all org.testcontainers artifacts to the catalog version, overriding
+// the older version pinned by the Spring Boot 3.4.0 BOM. Required for
+// compatibility with Docker Desktop 29.x / Engine API 1.54.
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.testcontainers") {
+            useVersion(libs.versions.testcontainers.get())
+            because("Docker Desktop 29.x requires Testcontainers >= 1.21.3")
+        }
     }
 }
 

@@ -3,7 +3,7 @@ spring-boot          = "3.4.0"
 spring-dep-mgmt      = "1.1.6"
 kotlin               = "2.1.0"
 jackson-kotlin       = "2.18.2"
-testcontainers       = "1.20.4"
+testcontainers       = "1.21.3"
 # spring-ai BOM version lives in gradle.properties (springAiVersion) because
 # io.spring.dependency-management resolves it before catalog accessors are ready.
 
@@ -21,6 +21,9 @@ spring-ai-testcontainers     = { module = "org.springframework.ai:spring-ai-spri
 # Kotlin
 kotlin-reflect               = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 jackson-module-kotlin        = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson-kotlin" }
+
+# JUnit Platform launcher — must be explicit on Gradle 9+
+junit-platform-launcher      = { module = "org.junit.platform:junit-platform-launcher" }
 
 # Testcontainers
 testcontainers-junit         = { module = "org.testcontainers:junit-jupiter",   version.ref = "testcontainers" }
