@@ -6,4 +6,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "sample-spring-ai"
+rootProject.name = "spring-ai-purpose-guard"

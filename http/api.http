@@ -1,4 +1,4 @@
-### sample-spring-ai — HTTP requests
+### Purpose Guard (spring-ai-purpose-guard) — HTTP requests
 ### Run from IntelliJ / Cursor: click the green ▶ next to each request.
 ### Prerequisites: app running on localhost:8080 (./gradlew bootRun or bootTestRun)
 ###               MySQL + Ollama up; startup must finish (embeddings + rule import).
