@@ -15,6 +15,13 @@ import org.springframework.boot.with
  * Subsequent runs reuse the committed Docker image and start in seconds.
  */
 fun main(args: Array<String>) {
+    // Pin the Docker Engine API version the docker-java client (used by
+    // Testcontainers) requests. Recent docker-java negotiates up to API 1.55,
+    // but Docker Desktop 29.x maxes out at 1.54 and rejects 1.55 with HTTP 400
+    // ("Could not find a valid Docker environment"). 1.47 is within every
+    // recent daemon's supported range (1.40–1.54+), so this is safe cross-env.
+    System.setProperty("api.version", "1.47")
+
     check(DockerClientFactory.instance().isDockerAvailable) {
         """
         Docker is not running. Please start Docker Desktop and try again.

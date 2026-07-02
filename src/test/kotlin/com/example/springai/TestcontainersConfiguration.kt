@@ -1,14 +1,12 @@
 package com.example.springai
 
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.context.annotation.Bean
-import org.springframework.test.context.DynamicPropertyRegistrar
 import org.testcontainers.DockerClientFactory
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.containers.MySQLContainer
+import org.testcontainers.images.ImagePullPolicy
 import org.testcontainers.ollama.OllamaContainer
 import org.testcontainers.utility.DockerImageName
 
@@ -22,30 +20,31 @@ class TestcontainersConfiguration {
         private const val OLLAMA_CACHED_IMAGE = "tc-ollama-$OLLAMA_MODEL:latest"
     }
 
-    /**
-     * Ollama container with the embedding model pre-pulled.
-     *
-     * First run: starts the base image, pulls the model (~600 MB), then commits
-     * a new local Docker image so the model survives container restarts.
-     * Subsequent runs: reuses the committed image and start in seconds.
-     *
-     * @ServiceConnection auto-wires spring.ai.ollama.base-url to the mapped port.
-     */
+    // MySQL container — @ServiceConnection auto-wires spring.datasource.* and
+    // Spring Boot runs schema.sql against it on startup.
+    @Bean
+    @ServiceConnection
+    fun mysqlContainer(): MySQLContainer<*> =
+        MySQLContainer(DockerImageName.parse("mysql:8.4"))
+            .withDatabaseName("sample_ai")
+            .withUsername("dev")
+            .withPassword("dev")
+
+    // Ollama container with the embedding model pre-pulled and committed to a
+    // reusable image so subsequent runs start quickly.
+    // @ServiceConnection auto-wires spring.ai.ollama.base-url.
     @Bean
     @ServiceConnection
     fun ollamaContainer(): OllamaContainer {
-        val cachedImageExists = DockerClientFactory.lazyClient()
-            .listImagesCmd()
-            .withImageNameFilter(OLLAMA_CACHED_IMAGE)
-            .exec()
-            .isNotEmpty()
-
-        return if (cachedImageExists) {
+        return if (imageExists(OLLAMA_CACHED_IMAGE)) {
             logger.info("Reusing cached Ollama image '$OLLAMA_CACHED_IMAGE'")
             OllamaContainer(
                 DockerImageName.parse(OLLAMA_CACHED_IMAGE)
                     .asCompatibleSubstituteFor("ollama/ollama")
             )
+                // The cached image is local-only (created via commitToImage), so it
+                // must never be resolved against a registry — that would 404.
+                .withImagePullPolicy(ImagePullPolicy { false })
         } else {
             logger.info("Pulling Ollama model '$OLLAMA_MODEL' (first run — this may take a few minutes)…")
             val container = OllamaContainer("ollama/ollama:latest")
@@ -57,28 +56,14 @@ class TestcontainersConfiguration {
         }
     }
 
-    /**
-     * OpenSearch container — no built-in @ServiceConnection for Spring AI's vector store,
-     * so the URI is registered via DynamicPropertyRegistrar.
-     */
-    @Bean
-    fun openSearchContainer(): GenericContainer<*> =
-        GenericContainer("opensearchproject/opensearch:2.13.0")
-            .withExposedPorts(9200)
-            .withEnv("discovery.type", "single-node")
-            .withEnv("plugins.security.disabled", "true")
-            .withEnv("OPENSEARCH_JAVA_OPTS", "-Xms512m -Xmx512m")
-            .waitingFor(
-                Wait.forHttp("/_cluster/health")
-                    .forPort(9200)
-                    .forStatusCode(200)
-            )
-
-    @Bean
-    fun openSearchProperties(@Qualifier("openSearchContainer") openSearchContainer: GenericContainer<*>): DynamicPropertyRegistrar =
-        DynamicPropertyRegistrar { registry ->
-            registry.add("spring.ai.vectorstore.opensearch.uris") {
-                "http://${openSearchContainer.host}:${openSearchContainer.getMappedPort(9200)}"
-            }
-        }
+    // Reliable local-image existence check: compares exact RepoTags rather than
+    // relying on the server-side reference filter (which can be inconsistent on
+    // Docker Desktop and yield false positives).
+    private fun imageExists(image: String): Boolean =
+        runCatching {
+            DockerClientFactory.lazyClient()
+                .listImagesCmd()
+                .exec()
+                .any { img -> img.repoTags?.any { it == image } == true }
+        }.getOrDefault(false)
 }

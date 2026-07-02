@@ -1,0 +1,161 @@
+### sample-spring-ai — HTTP requests
+### Run from IntelliJ / Cursor: click the green ▶ next to each request.
+### Prerequisites: app running on localhost:8080 (./gradlew bootRun or bootTestRun)
+###               MySQL + Ollama up; startup must finish (embeddings + rule import).
+
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+###############################################################################
+# 1. POST /api/validate-name — rule-based, data-driven validation
+###############################################################################
+
+### 1a. Consistent name (IT / software) — should match trained rule
+POST {{baseUrl}}/api/validate-name
+Content-Type: {{contentType}}
+
+{
+  "companyName": "株式会社テックソリューション",
+  "industryId": "IT",
+  "businessType": "software"
+}
+
+### 1b. Consistent name (ASCII variant)
+POST {{baseUrl}}/api/validate-name
+Content-Type: {{contentType}}
+
+{
+  "companyName": "Tech Solutions Inc",
+  "industryId": "IT",
+  "businessType": "software"
+}
+
+### 1c. Inconsistent name — conflicts with IT/software domain
+POST {{baseUrl}}/api/validate-name
+Content-Type: {{contentType}}
+
+{
+  "companyName": "ABC Bakery",
+  "industryId": "IT",
+  "businessType": "software"
+}
+
+### 1d. Finance / payments — consistent
+POST {{baseUrl}}/api/validate-name
+Content-Type: {{contentType}}
+
+{
+  "companyName": "Global Pay Co",
+  "industryId": "FIN",
+  "businessType": "payments"
+}
+
+### 1e. Finance / payments — inconsistent
+POST {{baseUrl}}/api/validate-name
+Content-Type: {{contentType}}
+
+{
+  "companyName": "Sunshine Farm",
+  "industryId": "FIN",
+  "businessType": "payments"
+}
+
+### 1f. Format validation failure — empty name
+POST {{baseUrl}}/api/validate-name
+Content-Type: {{contentType}}
+
+{
+  "companyName": "",
+  "industryId": "IT",
+  "businessType": "software"
+}
+
+### 1g. Unknown industry/business type — no trained rules (NEUTRAL)
+POST {{baseUrl}}/api/validate-name
+Content-Type: {{contentType}}
+
+{
+  "companyName": "株式会社サンプル",
+  "industryId": "UNKNOWN",
+  "businessType": "other"
+}
+
+###############################################################################
+# 2. POST /api/search-purpose — semantic search (in-memory vector store)
+###############################################################################
+
+### 2a. Default topK / threshold (from application.yml)
+POST {{baseUrl}}/api/search-purpose
+Content-Type: {{contentType}}
+
+{
+  "purpose": "AI healthcare diagnostics"
+}
+
+### 2b. Payments / fintech query
+POST {{baseUrl}}/api/search-purpose
+Content-Type: {{contentType}}
+
+{
+  "purpose": "cloud payments infrastructure"
+}
+
+### 2c. Strict search — higher threshold, fewer results
+POST {{baseUrl}}/api/search-purpose
+Content-Type: {{contentType}}
+
+{
+  "purpose": "e-commerce for small retailers",
+  "topK": 3,
+  "threshold": 0.7
+}
+
+### 2d. Broad search — lower threshold, more results
+POST {{baseUrl}}/api/search-purpose
+Content-Type: {{contentType}}
+
+{
+  "purpose": "digital transformation consulting",
+  "topK": 10,
+  "threshold": 0.3
+}
+
+###############################################################################
+# 3. POST /api/purposes — add + index a new purpose
+###############################################################################
+
+### 3a. Add a new purpose (persisted to MySQL + indexed in memory)
+POST {{baseUrl}}/api/purposes
+Content-Type: {{contentType}}
+
+{
+  "purpose": "Provide renewable energy solutions for residential homes"
+}
+
+### 3b. Search for the purpose just added (run 3a first, then this)
+POST {{baseUrl}}/api/search-purpose
+Content-Type: {{contentType}}
+
+{
+  "purpose": "solar power for houses",
+  "topK": 5,
+  "threshold": 0.4
+}
+
+### 3c. Add another purpose
+POST {{baseUrl}}/api/purposes
+Content-Type: {{contentType}}
+
+{
+  "purpose": "Cybersecurity threat detection for enterprise networks"
+}
+
+### 3d. Search cybersecurity-related purposes
+POST {{baseUrl}}/api/search-purpose
+Content-Type: {{contentType}}
+
+{
+  "purpose": "network security monitoring",
+  "topK": 5,
+  "threshold": 0.5
+}

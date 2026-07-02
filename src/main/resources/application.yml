@@ -1,4 +1,13 @@
 spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/sample_ai?createDatabaseIfNotExist=true
+    username: dev
+    password: dev
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      mode: always
+      continue-on-error: false
   ai:
     ollama:
       base-url: http://localhost:11434
@@ -8,16 +17,22 @@ spring:
       chat:
         options:
           model: llama3.2
-    vectorstore:
-      opensearch:
-        uris: http://localhost:9200
-        index-name: purposes
-        initialize-schema: true
 
 app:
   search:
     default-top-k: 5
     default-threshold: 0.5
+    seed-on-startup: true
+  rule:
+    # Filesystem path (relative to the working directory) of the trained CSV.
+    # Loaded into MySQL on startup; only newly-versioned rows are imported.
+    csv-path: data/company_name_rules.csv
+  training:
+    # Offline LLM training is disabled by default. Enable with:
+    #   ./gradlew bootRun --args="--app.training.enabled=true"
+    enabled: false
+    seed-csv-path: data/company_name_seed.csv
+    output-csv-path: data/company_name_rules.csv
 
 server:
   port: 8080
@@ -25,4 +40,5 @@ server:
 logging:
   level:
     root: INFO
-    org.springframework.ai: DEBUG
+    org.springframework.ai: INFO
+    com.example.springai: DEBUG

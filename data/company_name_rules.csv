@@ -1,0 +1,11 @@
+industry_id,business_type,company_name,relation,data_version
+IT,software,株式会社テックソリューション,CONSISTENT,1
+IT,software,Tech Solutions Inc,CONSISTENT,1
+IT,software,ABC Bakery,INCONSISTENT,1
+FIN,payments,株式会社ペイメンツ,CONSISTENT,1
+FIN,payments,Global Pay Co,CONSISTENT,1
+FIN,payments,Sunshine Farm,INCONSISTENT,1
+HEALTH,diagnostics,株式会社メディカルAI,CONSISTENT,1
+HEALTH,diagnostics,HealthDiagnostics Ltd,CONSISTENT,1
+RETAIL,ecommerce,株式会社ショップオンライン,CONSISTENT,1
+RETAIL,ecommerce,Online Retail Co,CONSISTENT,1

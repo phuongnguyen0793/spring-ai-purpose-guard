@@ -21,16 +21,18 @@ dependencyManagement {
 
 dependencies {
     implementation(libs.spring.boot.web)
+    implementation(libs.spring.boot.jdbc)
     implementation(libs.spring.ai.ollama)
-    implementation(libs.spring.ai.opensearch)
     implementation(libs.jackson.module.kotlin)
     implementation(libs.kotlin.reflect)
+    runtimeOnly(libs.mysql.connector)
 
     testImplementation(libs.spring.boot.test)
     testImplementation(libs.spring.boot.testcontainers)
     testImplementation(libs.spring.ai.testcontainers)
     testImplementation(libs.testcontainers.junit)
     testImplementation(libs.testcontainers.ollama)
+    testImplementation(libs.testcontainers.mysql)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
@@ -53,4 +55,10 @@ configurations.all {
     }
 }
 
-tasks.withType<Test> { useJUnitPlatform() }
+tasks.withType<Test> {
+    useJUnitPlatform()
+    // Pin the Docker Engine API version requested by docker-java/Testcontainers.
+    // Recent docker-java negotiates up to API 1.55, but Docker Desktop 29.x maxes
+    // out at 1.54 and rejects 1.55 with HTTP 400. 1.47 is safe across daemons.
+    systemProperty("api.version", "1.47")
+}

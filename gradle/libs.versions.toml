@@ -10,13 +10,16 @@ testcontainers       = "1.21.3"
 [libraries]
 # Spring Boot (versions managed by io.spring.dependency-management via Spring Boot BOM)
 spring-boot-web              = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-boot-jdbc             = { module = "org.springframework.boot:spring-boot-starter-jdbc" }
 spring-boot-test             = { module = "org.springframework.boot:spring-boot-starter-test" }
 spring-boot-testcontainers   = { module = "org.springframework.boot:spring-boot-testcontainers" }
 
 # Spring AI (versions managed by io.spring.dependency-management via Spring AI BOM)
 spring-ai-ollama             = { module = "org.springframework.ai:spring-ai-starter-model-ollama" }
-spring-ai-opensearch         = { module = "org.springframework.ai:spring-ai-starter-vector-store-opensearch" }
 spring-ai-testcontainers     = { module = "org.springframework.ai:spring-ai-spring-boot-testcontainers" }
+
+# Persistence
+mysql-connector              = { module = "com.mysql:mysql-connector-j" }
 
 # Kotlin
 kotlin-reflect               = { module = "org.jetbrains.kotlin:kotlin-reflect" }
@@ -28,6 +31,7 @@ junit-platform-launcher      = { module = "org.junit.platform:junit-platform-lau
 # Testcontainers
 testcontainers-junit         = { module = "org.testcontainers:junit-jupiter",   version.ref = "testcontainers" }
 testcontainers-ollama        = { module = "org.testcontainers:ollama",           version.ref = "testcontainers" }
+testcontainers-mysql         = { module = "org.testcontainers:mysql",            version.ref = "testcontainers" }
 
 [plugins]
 spring-boot         = { id = "org.springframework.boot",            version.ref = "spring-boot" }

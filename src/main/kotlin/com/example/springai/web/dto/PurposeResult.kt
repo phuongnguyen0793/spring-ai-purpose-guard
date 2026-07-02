@@ -1,3 +1,4 @@
 package com.example.springai.web.dto
 
-data class PurposeResult(val id: String, val purposeText: String, val score: Double)
+// score is cosine similarity in [0, 1]; higher means more similar.
+data class PurposeResult(val id: Long, val purposeText: String, val score: Double)
