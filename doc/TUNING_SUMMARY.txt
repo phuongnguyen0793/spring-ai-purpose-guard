@@ -1,0 +1,99 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║              topK vs threshold — semantic search tuning                    ║
+║              (in-memory cosine similarity, MySQL-backed embeddings)         ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+┌─ PARAMETERS (application.yml: app.search.*) ──────────────────────────────┐
+│                                                                           │
+│  topK       : Max results to return              (default: 5)             │
+│  threshold  : Min cosine similarity to include (default: 0.5)           │
+│                                                                           │
+│  Configure in application.yml or override per request in JSON body.      │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+
+┌─ SCORE SCALE (cosine similarity) ───────────────────────────────────────┐
+│                                                                           │
+│  Higher score = more similar. Range is typically 0.0 – 1.0.             │
+│                                                                           │
+│   0.9 – 1.0   Near-identical meaning                                     │
+│   0.7 – 0.9   Closely related                                            │
+│   0.5 – 0.7   Related (balanced default band)                            │
+│   0.3 – 0.5   Loosely related                                            │
+│   0.0 – 0.3   Weak / different topics                                    │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+
+┌─ TUNING SCENARIOS ──────────────────────────────────────────────────────┐
+│                                                                           │
+│  STRICT (high precision)                                                  │
+│  ├─ topK: 3–5                                                             │
+│  ├─ threshold: 0.7–0.8                                                    │
+│  └─ Use: support tickets, exact-ish matching                              │
+│                                                                           │
+│  BALANCED (recommended default)                                           │
+│  ├─ topK: 5                                                               │
+│  ├─ threshold: 0.5                                                        │
+│  └─ Use: general purpose search                                           │
+│                                                                           │
+│  BROAD (high recall)                                                      │
+│  ├─ topK: 10–20                                                           │
+│  ├─ threshold: 0.3–0.4                                                    │
+│  └─ Use: discovery, exploratory search                                    │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+
+┌─ HOW IT WORKS ──────────────────────────────────────────────────────────┐
+│                                                                           │
+│  Query text → Ollama embedding (Spring AI EmbeddingModel)               │
+│       │                                                                  │
+│       ▼                                                                  │
+│  Cosine similarity vs all entries in InMemoryVectorStore                │
+│  (loaded from MySQL business_purpose on startup)                        │
+│       │                                                                  │
+│       ▼                                                                  │
+│  [THRESHOLD FILTER]  keep only score >= threshold                         │
+│       │                                                                  │
+│       ▼                                                                  │
+│  [SORT DESC]         best matches first (highest score)                   │
+│       │                                                                  │
+│       ▼                                                                  │
+│  [LIMIT topK]        return at most K results                             │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+
+┌─ DECISION MATRIX ───────────────────────────────────────────────────────┐
+│                                                                           │
+│  Problem: 0 results                                                       │
+│  → Lower threshold (0.5 → 0.4 → 0.3)                                    │
+│                                                                           │
+│  Problem: too many weak matches                                           │
+│  → Raise threshold (0.5 → 0.6 → 0.7)                                    │
+│                                                                           │
+│  Problem: need more candidates                                            │
+│  → Increase topK                                                          │
+│                                                                           │
+│  Problem: need fewer candidates                                           │
+│  → Decrease topK                                                          │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+
+┌─ API EXAMPLES (POST /api/search-purpose) ───────────────────────────────┐
+│                                                                           │
+│  Default (from application.yml):                                        │
+│    {"purpose": "AI healthcare diagnostics"}                              │
+│                                                                           │
+│  Strict:                                                                 │
+│    {"purpose": "payments platform", "topK": 3, "threshold": 0.7}        │
+│                                                                           │
+│  Broad:                                                                  │
+│    {"purpose": "digital transformation", "topK": 10, "threshold": 0.3}  │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+
+Key takeaway:
+  threshold = quality floor (minimum similarity)
+  topK        = quantity cap (max results)
+
+Note: This replaces the old pgvector/OpenSearch "distance" model where lower
+values meant closer matches. Here, higher score means more similar.
